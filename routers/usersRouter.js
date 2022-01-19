@@ -1,8 +1,14 @@
 const fs = require("fs");
-const { validateUser } = require("../userHelpers");
+const {
+    validateUser
+} = require("../userHelpers");
 const express = require("express");
 const router = express.Router();
-const { v4: uuidv4 } = require("uuid");
+const {
+    v4: uuidv4
+} = require("uuid");
+
+const user = require('../models/user')
 
 router.post("/", validateUser, async (req, res, next) => {
     try {
@@ -23,6 +29,8 @@ router.post("/", validateUser, async (req, res, next) => {
             age,
             password
         });
+        const User = new user({ id, username, password, age })
+        await User.save()
         await fs.promises.writeFile("./user.json", JSON.stringify(data), {
             encoding: "utf8",
         });
@@ -43,7 +51,8 @@ router.patch("/users/:userId", validateUser, async (req, res, next) => {
         const {
             username,
             age,
-            password
+            password,
+            id
         } = req.body;
         const users = await fs.promises
             .readFile("./user.json", {
@@ -117,40 +126,40 @@ router.get('/', async (req, res, next) => {
 
 })
 
-router.post('/users/login', async(req, res, next) => {
+router.post('/users/login', async (req, res, next) => {
     try {
         const users = await fs.promises
             .readFile("./user.json", {
                 encoding: "utf8"
             })
             .then((data) => JSON.parse(data));
-        const loguser = users.find(user => user.password === req.body.password && user.username === req.body.username)
+        const loguser = users.find(user => user.password == req.body.password && user.username === req.body.username)
         if (!loguser) return res.status(400).send('incorrect user')
     } catch (error) {
-         next({
-             status: 500,
-             internalMessage: error.message
-         });
+        next({
+            status: 500,
+            internalMessage: error.message
+        });
     }
 })
 
 router.delete("/:userId", async (req, res) => {
 
     try {
-            const {
-                username,
-                age,
-                password
-            } = req.query
+        const {
+            username,
+            age,
+            password
+        } = req.query
         const users = await fs.promises
             .readFile("./user.json", {
                 encoding: "utf8"
             })
             .then((data) => JSON.parse(data));
-        
+
         users.map((user) => {
             if (user.id == req.params.userId) {
-                     
+
                 data.pop({
                     id,
                     username,
@@ -160,7 +169,7 @@ router.delete("/:userId", async (req, res) => {
             }
         })
     
-                
+
     } catch (error) {
         next({
             status: 500,
@@ -178,4 +187,6 @@ module.exports = {
 
 
 
-module.exports = router;
+module.exports = {
+    router
+}
