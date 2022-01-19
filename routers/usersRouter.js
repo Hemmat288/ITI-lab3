@@ -117,6 +117,23 @@ router.get('/', async (req, res, next) => {
 
 })
 
+router.post('/users/login', async(req, res, next) => {
+    try {
+        const users = await fs.promises
+            .readFile("./user.json", {
+                encoding: "utf8"
+            })
+            .then((data) => JSON.parse(data));
+        const loguser = users.find(user => user.password === req.body.password && user.username === req.body.username)
+        if (!loguser) return res.status(400).send('incorrect user')
+    } catch (error) {
+         next({
+             status: 500,
+             internalMessage: error.message
+         });
+    }
+})
+
 router.delete("/:userId", async (req, res) => {
 
     try {
